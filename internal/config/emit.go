@@ -196,6 +196,9 @@ func emitGatewayBlock(body *hclwrite.Body, s *GatewaySettings) {
 	if s.DashboardConfigWrites {
 		gw.SetAttributeValue("dashboard_config_writes", cty.BoolVal(true))
 	}
+	setStr("dashboard_name", s.DashboardName)
+	setStr("dashboard_logo_url", s.DashboardLogoURL)
+	setStr("dashboard_icon_url", s.DashboardIconURL)
 	setStr("resolver", s.Resolver)
 	setStr("log_path", s.LogPath)
 	if s.Telemetry != nil {

@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Log in — Claw Patrol</title>
-    <link rel="icon" type="image/svg+xml" href="/claw-patrol-icon.svg" />
+    <title>Log in — {{.Branding.Name}}</title>
+    <link rel="icon" type="image/svg+xml" href="{{.Branding.IconURL}}" />
     <style>
       /* ── Minimal subset of the dashboard's design tokens ─────────
          Only the values used on this page; mirrors dashboard/src/index.css.
@@ -67,9 +67,23 @@
         padding: 24px;
       }
 
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
       .logo {
         height: 48px;
         width: auto;
+        max-width: 160px;
+      }
+
+      .brand-name {
+        color: var(--color-text);
+        font-family: var(--font-display);
+        font-size: 28px;
+        line-height: 1;
       }
 
       form {
@@ -154,12 +168,15 @@
   </head>
 
   <body>
-    <img src="/claw-patrol-logo.svg" alt="Claw Patrol" class="logo" />
+    <div class="brand">
+      <img src="{{.Branding.LogoURL}}" alt="" class="logo" />
+      <span class="brand-name">{{.Branding.Name}}</span>
+    </div>
     <form method="POST" action="/__login?next={{.Next}}">
       {{if .FirstRun}}
       <h1>Set dashboard password</h1>
       <p class="hint">
-        Claw Patrol has no operator yet. Pick a password — it will be required to reach the
+        {{.Branding.Name}} has no operator yet. Pick a password — it will be required to reach the
         dashboard and the management API from now on.
       </p>
       {{if .Error}}

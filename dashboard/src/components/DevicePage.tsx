@@ -25,6 +25,7 @@ export function DevicePage({
   agents,
   integrations,
   configFile,
+  productName,
   onBack,
   onConnect,
   onRefresh,
@@ -33,6 +34,7 @@ export function DevicePage({
   agents: Agent[];
   integrations: Integration[];
   configFile: string;
+  productName: string;
   onBack: () => void;
   onConnect: (id: string) => void;
   onRefresh: () => void;
@@ -85,7 +87,7 @@ export function DevicePage({
   async function remove() {
     if (
       !confirm(
-        `Remove ${dev.hostname || dev.ip} from Claw Patrol?\n\nThis clears the device's tracking + owner mapping. Tailscale node stays — remove from admin console if you want a hard kick.`,
+        `Remove ${dev.hostname || dev.ip} from ${productName}?\n\nThis clears the device's tracking + owner mapping. Tailscale node stays — remove from admin console if you want a hard kick.`,
       )
     )
       return;

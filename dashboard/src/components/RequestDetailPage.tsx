@@ -43,7 +43,15 @@ function approverKindLabel(type?: string): string {
   }
 }
 
-export function RequestDetailPage({ id, agents }: { id: string; agents: Agent[] }) {
+export function RequestDetailPage({
+  id,
+  agents,
+  productName,
+}: {
+  id: string;
+  agents: Agent[];
+  productName: string;
+}) {
   const [ev, setEv] = useState<EventRecord | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const { byFamily } = useFacets();
@@ -125,7 +133,7 @@ export function RequestDetailPage({ id, agents }: { id: string; agents: Agent[] 
             {fullUrl}
           </span>
           <span className="ml-auto">
-            <ActionButtons ev={ev} />
+            <ActionButtons ev={ev} productName={productName} />
           </span>
         </div>
         <div className="flex items-center gap-4 text-xs text-text-muted flex-wrap">
@@ -214,7 +222,7 @@ export function RequestDetailPage({ id, agents }: { id: string; agents: Agent[] 
   );
 }
 
-function ActionButtons({ ev }: { ev: EventRecord }) {
+function ActionButtons({ ev, productName }: { ev: EventRecord; productName: string }) {
   const [ruleOpen, setRuleOpen] = useState(false);
   const canBlock = !!ev.id && ev.action !== "in_flight" && (!!ev.endpoint || ev.mode === "splice");
   return (
@@ -224,8 +232,10 @@ function ActionButtons({ ev }: { ev: EventRecord }) {
           Block requests like this
         </Button>
       )}
-      <DownloadActionButton ev={ev} />
-      {ruleOpen && <RulePreviewModal ev={ev} onClose={() => setRuleOpen(false)} />}
+      <DownloadActionButton ev={ev} productName={productName} />
+      {ruleOpen && (
+        <RulePreviewModal ev={ev} productName={productName} onClose={() => setRuleOpen(false)} />
+      )}
     </div>
   );
 }
@@ -235,7 +245,7 @@ function ActionButtons({ ev }: { ev: EventRecord }) {
 // runner reads files in this exact format — drop the download into a
 // fixtures/ directory and `clawpatrol test config.hcl fixtures/` will
 // replay it against a candidate policy. See site/doc/clawpatrol-test.md.
-function DownloadActionButton({ ev }: { ev: EventRecord }) {
+function DownloadActionButton({ ev, productName }: { ev: EventRecord; productName: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   if (!ev.id) return null;
@@ -257,14 +267,22 @@ function DownloadActionButton({ ev }: { ev: EventRecord }) {
           setBusy(false);
         }
       }}
-      title={err ?? "Download as a Claw Patrol test fixture"}
+      title={err ?? `Download as a ${productName} test fixture`}
     >
       {busy ? "Downloading…" : "Download action"}
     </Button>
   );
 }
 
-function RulePreviewModal({ ev, onClose }: { ev: EventRecord; onClose: () => void }) {
+function RulePreviewModal({
+  ev,
+  productName,
+  onClose,
+}: {
+  ev: EventRecord;
+  productName: string;
+  onClose: () => void;
+}) {
   const [preview, setPreview] = useState<RulePreview | null>(null);
   const [hcl, setHCL] = useState("");
   const [busy, setBusy] = useState(true);
@@ -350,8 +368,8 @@ function RulePreviewModal({ ev, onClose }: { ev: EventRecord; onClose: () => voi
         ) : (
           <p className="text-sm text-text-muted">
             {passthrough
-              ? "This request was passed through without MITM inspection because no endpoint matched it. Claw Patrol generated HCL that creates an endpoint for the observed host, claims it from existing profiles via a passthrough credential, and denies future matching requests before they pass through."
-              : "Claw Patrol generated a narrow deny rule from this inspected action. Edit the condition if you want to broaden it."}
+              ? `This request was passed through without MITM inspection because no endpoint matched it. ${productName} generated HCL that creates an endpoint for the observed host, claims it from existing profiles via a passthrough credential, and denies future matching requests before they pass through.`
+              : `${productName} generated a narrow deny rule from this inspected action. Edit the condition if you want to broaden it.`}
           </p>
         )}
         {!applied && busy ? (

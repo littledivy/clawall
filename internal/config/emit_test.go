@@ -101,6 +101,48 @@ func TestEmitDashboardConfigWrites(t *testing.T) {
 	}
 }
 
+func TestEmitDashboardBranding(t *testing.T) {
+	gw, diags := config.LoadBytes([]byte(`gateway {
+  dashboard_name = "Acme Gateway"
+  dashboard_logo_url = "https://assets.example.test/acme-logo.svg"
+  dashboard_icon_url = "https://assets.example.test/acme-icon.svg"
+  wireguard {
+    subnet_cidr = "10.55.0.0/24"
+    endpoint = "127.0.0.1:51820"
+  }
+}
+`), "branding.hcl")
+	if diags.HasErrors() {
+		t.Fatalf("load: %v", diags)
+	}
+	if got := gw.DashboardName(); got != "Acme Gateway" {
+		t.Fatalf("DashboardName = %q", got)
+	}
+	if got := gw.DashboardLogoURL(); got != "https://assets.example.test/acme-logo.svg" {
+		t.Fatalf("DashboardLogoURL = %q", got)
+	}
+	if got := gw.DashboardIconURL(); got != "https://assets.example.test/acme-icon.svg" {
+		t.Fatalf("DashboardIconURL = %q", got)
+	}
+
+	emitted, err := config.Emit(gw)
+	if err != nil {
+		t.Fatalf("emit: %v", err)
+	}
+	for _, want := range []string{
+		`dashboard_name`,
+		`"Acme Gateway"`,
+		`dashboard_logo_url`,
+		`"https://assets.example.test/acme-logo.svg"`,
+		`dashboard_icon_url`,
+		`"https://assets.example.test/acme-icon.svg"`,
+	} {
+		if !strings.Contains(string(emitted), want) {
+			t.Fatalf("emitted config missing %s:\n%s", want, emitted)
+		}
+	}
+}
+
 func TestEmitBasicAuthCredential(t *testing.T) {
 	gw, diags := config.LoadBytes([]byte(`gateway {
   wireguard {

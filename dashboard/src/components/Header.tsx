@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Whoami } from "../lib/api";
+import type { DashboardBranding, Whoami } from "../lib/api";
 
 // Global header — rendered above every route. Logo links home; the
 // nav cluster on the right is four circular icon buttons for the
@@ -11,29 +11,27 @@ import type { Whoami } from "../lib/api";
 // affordances (e.g. an unread indicator on the account button) can
 // read it without a signature change.
 export function Header({
+  branding,
   whoami: _whoami,
   currentRoute,
 }: {
+  branding?: DashboardBranding | null;
   whoami: Whoami | null;
   currentRoute?: string;
 }) {
   // Single-device pages are part of the Devices section, so the nav
   // button stays lit when drilling into a device.
   const devicesActive = currentRoute === "devices" || currentRoute === "device";
+  const name = branding?.name?.trim() || "Claw Patrol";
+  const logoURL = branding?.logo_url || import.meta.env.BASE_URL + "claw-patrol-logo.svg";
   return (
     <header className="border-b-1.5 border-b-canvas-muted">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-4">
-        <a href="#/" aria-label="Home" className="shrink-0">
-          <img
-            src={import.meta.env.BASE_URL + "claw-patrol-logo.svg"}
-            alt="Claw Patrol"
-            className="h-8 w-auto hidden xs:block"
-          />
-          <img
-            src={import.meta.env.BASE_URL + "claw-patrol-icon.svg"}
-            alt="Claw Patrol"
-            className="h-8 w-auto xs:hidden"
-          />
+        <a href="#/" aria-label={`${name} home`} className="shrink-0 flex items-center gap-2">
+          <img src={logoURL} alt="" className="h-8 w-auto max-w-24 sm:max-w-36" />
+          <span className="font-display text-lg sm:text-xl leading-none text-text truncate max-w-[12rem]">
+            {name}
+          </span>
         </a>
         <nav className="ml-auto flex items-center gap-1">
           <NavLink href="#/devices" label="Devices" active={devicesActive}>

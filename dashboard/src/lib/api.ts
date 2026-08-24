@@ -445,11 +445,18 @@ export type UpdateBanner = {
   advisory?: string;
 };
 
+export type DashboardBranding = {
+  name: string;
+  logo_url: string;
+  icon_url: string;
+};
+
 type StateResp = {
   whoami: Whoami;
   integrations: Integration[];
   agents: Agent[];
   update?: UpdateBanner | null;
+  branding?: DashboardBranding;
   // Basename of the gateway config file (e.g. "gateway.hcl",
   // "dev.hcl"). Surfaced in UI hints so operators see the actual
   // running config name rather than a hardcoded string.

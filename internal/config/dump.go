@@ -44,6 +44,9 @@ func dumpSettings(s *GatewaySettings) map[string]any {
 	setStr("public_url", s.PublicURL)
 	setStr("state_dir", s.StateDir)
 	setStr("dashboard_session_ttl", s.DashboardSessionTTL)
+	setStr("dashboard_name", s.DashboardName)
+	setStr("dashboard_logo_url", s.DashboardLogoURL)
+	setStr("dashboard_icon_url", s.DashboardIconURL)
 	setStr("resolver", s.Resolver)
 	setStr("log_path", s.LogPath)
 	if s.Telemetry != nil {

@@ -205,6 +205,23 @@ so off-tailnet devices can join and OAuth callbacks can land. **The
 dashboard itself is not Funnel-reachable** — Funnel does not replace
 the tailnet (or SSH) path for operator access.
 
+### Dashboard branding
+
+Set `dashboard_name` and `dashboard_logo_url` in `gateway {}` to
+replace the bundled Claw Patrol name and logo in the dashboard header
+and login page. `dashboard_icon_url` is optional; when omitted, the
+dashboard reuses `dashboard_logo_url` for compact/mobile surfaces.
+
+```hcl
+gateway {
+  dashboard_name     = "Acme Gateway"
+  dashboard_logo_url = "https://assets.example.com/acme-logo.svg"
+  dashboard_icon_url = "https://assets.example.com/acme-icon.svg"
+
+  # ...
+}
+```
+
 ## Body size limits
 
 The gateway buffers request and response bodies for two independent

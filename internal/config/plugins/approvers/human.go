@@ -28,7 +28,8 @@ import (
 // override the global defaults block on a per-approver basis.
 //
 // Credential references a credential whose body satisfies HITLNotifier
-// (slack_tokens today; future Discord / Telegram / SMTP credentials).
+// (slack_tokens and signal_cli today; future Discord / Telegram / SMTP
+// credentials).
 // Leave empty for a dashboard-only approver (no channel notification;
 // operator clicks approve/deny on the dashboard).
 type HumanApprover struct {

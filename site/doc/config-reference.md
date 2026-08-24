@@ -143,7 +143,8 @@ Targets one channel. Timeout / require_approvers
 override the global defaults block on a per-approver basis.
 
 Credential references a credential whose body satisfies HITLNotifier
-(slack_tokens today; future Discord / Telegram / SMTP credentials).
+(slack_tokens and signal_cli today; future Discord / Telegram / SMTP
+credentials).
 Leave empty for a dashboard-only approver (no channel notification;
 operator clicks approve/deny on the dashboard).
 
@@ -187,7 +188,7 @@ approver "llm_approver" "example" {
 
 Block syntax: `credential "<type>" "<name>" { ... }`
 
-Registered types: [`anthropic_manual_key`](#credential-anthropicmanualkey), [`anthropic_oauth_subscription`](#credential-anthropicoauthsubscription), [`aws_credential`](#credential-awscredential), [`basic_auth`](#credential-basicauth), [`bearer_token`](#credential-bearertoken), [`clickhouse_credential`](#credential-clickhousecredential), [`cookie_token`](#credential-cookietoken), [`discord_bot_token`](#credential-discordbottoken), [`gemini_api_key`](#credential-geminiapikey), [`github_oauth`](#credential-githuboauth), [`google_gke_credential`](#credential-googlegkecredential), [`header_token`](#credential-headertoken), [`mtls_credential`](#credential-mtlscredential), [`notion_mcp_oauth`](#credential-notionmcpoauth), [`notion_oauth`](#credential-notionoauth), [`openai_codex_oauth`](#credential-openaicodexoauth), [`passthrough`](#credential-passthrough), [`postgres_credential`](#credential-postgrescredential), [`slack_tokens`](#credential-slacktokens), [`ssh_key`](#credential-sshkey), [`tailscale_auth`](#credential-tailscaleauth), [`telegram_bot_token`](#credential-telegrambottoken).
+Registered types: [`anthropic_manual_key`](#credential-anthropicmanualkey), [`anthropic_oauth_subscription`](#credential-anthropicoauthsubscription), [`aws_credential`](#credential-awscredential), [`basic_auth`](#credential-basicauth), [`bearer_token`](#credential-bearertoken), [`clickhouse_credential`](#credential-clickhousecredential), [`cookie_token`](#credential-cookietoken), [`discord_bot_token`](#credential-discordbottoken), [`gemini_api_key`](#credential-geminiapikey), [`github_oauth`](#credential-githuboauth), [`google_gke_credential`](#credential-googlegkecredential), [`header_token`](#credential-headertoken), [`mtls_credential`](#credential-mtlscredential), [`notion_mcp_oauth`](#credential-notionmcpoauth), [`notion_oauth`](#credential-notionoauth), [`openai_codex_oauth`](#credential-openaicodexoauth), [`passthrough`](#credential-passthrough), [`postgres_credential`](#credential-postgrescredential), [`signal_cli`](#credential-signalcli), [`slack_tokens`](#credential-slacktokens), [`ssh_key`](#credential-sshkey), [`tailscale_auth`](#credential-tailscaleauth), [`telegram_bot_token`](#credential-telegrambottoken).
 
 ### `credential "anthropic_manual_key" "<name>"`
 
@@ -396,6 +397,26 @@ the catchall (one allowed per (profile, endpoint)).
 
 ```hcl
 credential "postgres_credential" "example" {}
+```
+
+### `credential "signal_cli" "<name>"`
+
+A notification-only HITL notifier that delivers approval
+prompts to Signal via a signal-cli-rest-api instance
+(https://github.com/bbernhard/signal-cli-rest-api). Signal has no
+interactive buttons, so the prompt is plain text ending in an
+"Open dashboard" link where the operator approves or denies.
+
+It has no HCL attributes; connection details live in the secret store as
+named slots, filled via the dashboard: api_url (base URL of the
+signal-cli-rest-api), number (the registered E.164 sender), and auth
+(optional "user:pass" for HTTP basic auth). The recipient is the
+human_approver's channel - an E.164 number or a "group.<base64-id>".
+
+_No configurable attributes._
+
+```hcl
+credential "signal_cli" "example" {}
 ```
 
 ### `credential "slack_tokens" "<name>"`

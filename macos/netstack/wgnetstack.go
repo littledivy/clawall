@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/netip"
@@ -802,6 +803,21 @@ var (
 	tsStarted bool
 )
 
+// isStaleStateErr matches tsnet.Server.Up errors that indicate the
+// persisted state in Dir is from an incompatible past (different
+// control plane, expired/revoked auth key tied to old node identity,
+// half-written tailscaled.state from a crashed prior init). Recovery
+// is to wipe the state dir and retry with the supplied fresh auth
+// key. Matches on the message Tailscale's control returns:
+// "backend: invalid key: API key XXXX not valid".
+func isStaleStateErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "invalid key") || strings.Contains(msg, "not valid")
+}
+
 // ts_netstack_init joins the tailnet with the given ephemeral auth key
 // and configures the gateway as the tsnet exit node so subsequent dials
 // route through it. Blocks until the tsnet node has a 100.x.x.x address
@@ -853,17 +869,38 @@ func ts_netstack_init(authKeyC, controlURLС, gwHostC, gwIPC, tokenC, hostnameC,
 		tsHostname = fmt.Sprintf("clawpatrol-ne-%d", os.Getpid())
 	}
 
-	s := &tsnet.Server{
-		Hostname:   tsHostname,
-		AuthKey:    authKey,
-		ControlURL: controlURL,
-		Dir:        stateDir,
-		Logf:       func(string, ...any) {},
+	newServer := func() *tsnet.Server {
+		return &tsnet.Server{
+			Hostname:   tsHostname,
+			AuthKey:    authKey,
+			ControlURL: controlURL,
+			Dir:        stateDir,
+			Logf:       func(string, ...any) {},
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
+
+	s := newServer()
 	upSt, err := s.Up(ctx)
+	// "invalid key" on first Up means the saved state in stateDir is
+	// stale (most commonly: upgrade from a build that wrote a half-
+	// initialised tailscaled.state, or the tailnet the saved node
+	// belongs to no longer accepts this auth key). Wipe stateDir and
+	// retry once with a clean slate so the fresh auth key actually
+	// gets consumed against the current control URL.
+	if err != nil && isStaleStateErr(err) {
+		_ = s.Close()
+		log.Printf("ts_netstack_init: stale state detected (%v); wiping %s and retrying", err, stateDir)
+		_ = os.RemoveAll(stateDir)
+		if mkErr := os.MkdirAll(stateDir, 0o700); mkErr != nil {
+			setErr(errBuf, errLen, "mkdir state dir after wipe: "+mkErr.Error())
+			return -1
+		}
+		s = newServer()
+		upSt, err = s.Up(ctx)
+	}
 	if err != nil {
 		_ = s.Close()
 		setErr(errBuf, errLen, "tsnet up: "+err.Error())

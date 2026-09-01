@@ -1093,6 +1093,10 @@ func (w *webMux) apiAgentProfile(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "unknown profile", 400)
 		return
 	}
+	if bindings, _ := rolesFromContext(r.Context()); !canEditProfile(bindings, profile) {
+		http.Error(rw, "editing profile "+profile+" requires editor on that profile", http.StatusForbidden)
+		return
+	}
 	w.g.onboard.AssignProfile(ip, profile)
 	writeJSON(rw, map[string]any{"ok": true, "ip": ip, "profile": profile})
 }

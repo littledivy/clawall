@@ -52,6 +52,7 @@ func TestAPICredentialsSetPreservesUntouchedSlotsAndClearsExplicitEmpty(t *testi
 		"/api/credentials/set",
 		strings.NewReader(`{"id":"client-tls","owner":"default","slots":{"cert":"new-cert","ca":""}}`),
 	)
+	req = req.WithContext(contextWithRoles(req.Context(), []roleBinding{{roleAdmin, scopeGlobal}}))
 	rr := httptest.NewRecorder()
 	w.apiCredentialsSet(rr, req)
 

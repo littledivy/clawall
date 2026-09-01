@@ -207,7 +207,7 @@ func (w *webMux) handler() http.Handler {
 	}
 	w.mountCredentialWebhooks(mux)
 	mux.Handle("/", w.staticHandler())
-	return w.dashboardAuthGate(w.tailnetGate(mux))
+	return w.dashboardAuthGate(w.tailnetGate(w.authzGate(mux)))
 }
 
 func (w *webMux) routes() []webRoute {
@@ -268,6 +268,13 @@ func (w *webMux) routes() []webRoute {
 		// session to clear; the dashboard SPA disables the button for
 		// them rather than calling this endpoint).
 		{Method: http.MethodPost, Path: "/__logout", Auth: authDashboard, Handler: w.apiDashboardLogout},
+		// RBAC management. All authDashboard for reachability; authzGate
+		// enforces the actual role requirement (admin/* for users/grant/
+		// revoke, any grant for /me).
+		{Method: http.MethodGet, Path: rbacRouteMe, Auth: authDashboard, Handler: w.apiRBACMe},
+		{Method: http.MethodGet, Path: rbacRouteUsers, Auth: authDashboard, Handler: w.apiRBACUsers},
+		{Method: http.MethodPost, Path: rbacRouteGrant, Auth: authDashboard, Handler: w.apiRBACGrant},
+		{Method: http.MethodPost, Path: rbacRouteRevoke, Auth: authDashboard, Handler: w.apiRBACRevoke},
 	}
 }
 
@@ -1228,6 +1235,10 @@ func (w *webMux) apiCredentialsSet(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "missing id", 400)
 		return
 	}
+	if bindings, _ := rolesFromContext(r.Context()); !canEditGlobal(bindings) {
+		http.Error(rw, "editing credentials requires a global editor or admin role", http.StatusForbidden)
+		return
+	}
 	policy := w.g.policy.Load()
 	ent, ok := policy.Credentials[body.ID]
 	if !ok {
@@ -1283,6 +1294,10 @@ func (w *webMux) apiCredentialsClear(rw http.ResponseWriter, r *http.Request) {
 	}
 	if body.ID == "" {
 		http.Error(rw, "missing id", 400)
+		return
+	}
+	if bindings, _ := rolesFromContext(r.Context()); !canEditGlobal(bindings) {
+		http.Error(rw, "editing credentials requires a global editor or admin role", http.StatusForbidden)
 		return
 	}
 	if err := clearCredentialSecrets(w.g.db, body.ID); err != nil {
